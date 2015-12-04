@@ -32,12 +32,12 @@ function is_chat_msg( msg )
 end
 
 function string.random(length)
-  local str = "";
-  for i = 1, length do
-    math.random(97, 122)
-    str = str..string.char(math.random(97, 122));
-  end
-  return str;
+   local str = "";
+   for i = 1, length do
+      math.random(97, 122)
+      str = str..string.char(math.random(97, 122));
+   end
+   return str;
 end
 
 function string:split(sep)
@@ -179,19 +179,8 @@ function is_admin(msg)
   return var
 end
 
-function is_administrator(user_id)
-  local var = true
-  local data = load_data(_config.moderation.data)
-  if data[tostring(admins)] then
-    if data['admins'][user_id] then
-      var = false
-    end
-  end
-  return var
-end
-
 -- user has moderator privileges
-function is_mod(msg)
+function is_momod(msg)
   local var = false
   local data = load_data(_config.moderation.data)
   local user = msg.from.id
@@ -442,15 +431,15 @@ end
 
 -- Check if user can use the plugin
 function user_allowed(plugin, msg)
-  -- Check user if plugin moderated = true
-  if plugin.moderated and not is_mod(msg) then -- check if user is a moderator
-    if plugin.moderated and not is_admin(msg) then -- check if user is an administrator
-      if plugin.moderated and not is_sudo(msg) then -- check if user is a sudoers
+  -- Berfungsi utk mengecek user jika plugin moderated = true
+  if plugin.moderated and not is_momod(msg) then --Cek apakah user adalah momod
+    if plugin.moderated and not is_admin(msg) then -- Cek apakah user adalah admin
+      if plugin.moderated and not is_sudo(msg) then -- Cek apakah user adalah sudoers
         return false
       end
     end
   end
-  -- check user if plugins privileged = true
+  -- Berfungsi mengecek user jika plugin privileged = true
   if plugin.privileged and not is_sudo(msg) then
     return false
   end
@@ -459,52 +448,52 @@ end
 
 
 function send_order_msg(destination, msgs)
-  local cb_extra = {
-    destination = destination,
-    msgs = msgs
-  }
-  send_order_msg_callback(cb_extra, true)
+   local cb_extra = {
+      destination = destination,
+      msgs = msgs
+   }
+   send_order_msg_callback(cb_extra, true)
 end
 
 function send_order_msg_callback(cb_extra, success, result)
-  local destination = cb_extra.destination
-  local msgs = cb_extra.msgs
-  local file_path = cb_extra.file_path
-  if file_path ~= nil then
-    os.remove(file_path)
-    print("Deleted: " .. file_path)
-  end
-  if type(msgs) == 'string' then
-    send_large_msg(destination, msgs)
-  elseif type(msgs) ~= 'table' then
-    return
-  end
-  if #msgs < 1 then
-    return
-  end
-  local msg = table.remove(msgs, 1)
-  local new_cb_extra = {
-    destination = destination,
-    msgs = msgs
-  }
-  if type(msg) == 'string' then
-    send_msg(destination, msg, send_order_msg_callback, new_cb_extra)
-  elseif type(msg) == 'table' then
-    local typ = msg[1]
-    local nmsg = msg[2]
-    new_cb_extra.file_path = nmsg
-    if typ == 'document' then
-      send_document(destination, nmsg, send_order_msg_callback, new_cb_extra)
-    elseif typ == 'image' or typ == 'photo' then
-      send_photo(destination, nmsg, send_order_msg_callback, new_cb_extra)
-    elseif typ == 'audio' then
-      send_audio(destination, nmsg, send_order_msg_callback, new_cb_extra)
-    elseif typ == 'video' then
-      send_video(destination, nmsg, send_order_msg_callback, new_cb_extra)
-    else
-      send_file(destination, nmsg, send_order_msg_callback, new_cb_extra)
-    end
-  end
+   local destination = cb_extra.destination
+   local msgs = cb_extra.msgs
+   local file_path = cb_extra.file_path
+   if file_path ~= nil then
+      os.remove(file_path)
+      print("Deleted: " .. file_path)
+   end
+   if type(msgs) == 'string' then
+      send_large_msg(destination, msgs)
+   elseif type(msgs) ~= 'table' then
+      return
+   end
+   if #msgs < 1 then
+      return
+   end
+   local msg = table.remove(msgs, 1)
+   local new_cb_extra = {
+      destination = destination,
+      msgs = msgs
+   }
+   if type(msg) == 'string' then
+      send_msg(destination, msg, send_order_msg_callback, new_cb_extra)
+   elseif type(msg) == 'table' then
+      local typ = msg[1]
+      local nmsg = msg[2]
+      new_cb_extra.file_path = nmsg
+      if typ == 'document' then
+         send_document(destination, nmsg, send_order_msg_callback, new_cb_extra)
+      elseif typ == 'image' or typ == 'photo' then
+         send_photo(destination, nmsg, send_order_msg_callback, new_cb_extra)
+      elseif typ == 'audio' then
+         send_audio(destination, nmsg, send_order_msg_callback, new_cb_extra)
+      elseif typ == 'video' then
+         send_video(destination, nmsg, send_order_msg_callback, new_cb_extra)
+      else
+         send_file(destination, nmsg, send_order_msg_callback, new_cb_extra)
+      end
+   end
 end
 
 -- Same as send_large_msg_callback but friendly params
