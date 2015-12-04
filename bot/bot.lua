@@ -41,11 +41,11 @@ function on_binlog_replay_end()
 end
 
 function msg_valid(msg)
-  -- Don't process outgoing messages (our message)
---  if msg.out then
---    print('\27[36mNot valid: msg from us\27[39m')
---    return false
---  end
+  -- Don't process outgoing messages
+  if msg.out then
+    print('\27[36mNot valid: msg from us\27[39m')
+    return false
+  end
 
   -- Before bot was started
   if msg.date < now then
@@ -68,11 +68,10 @@ function msg_valid(msg)
     return false
   end
 
-  -- Don't process messages from ourself
---  if msg.from.id == our_id then
---    print('\27[36mNot valid: Msg from our id\27[39m')
---    return false
---  end
+  if msg.from.id == our_id then
+    print('\27[36mNot valid: Msg from our id\27[39m')
+    return false
+  end
 
   if msg.to.type == 'encr_chat' then
     print('\27[36mNot valid: Encrypted chat\27[39m')
@@ -89,20 +88,20 @@ end
 
 --
 function pre_process_service_msg(msg)
-  if msg.service then
-    local action = msg.action or {type=""}
-    -- Double ! to discriminate of normal actions
-    msg.text = "!!tgservice " .. action.type
+   if msg.service then
+      local action = msg.action or {type=""}
+      -- Double ! to discriminate of normal actions
+      msg.text = "!!tgservice " .. action.type
 
-    -- wipe the data to allow the bot to read service messages
-    if msg.out then
-      msg.out = false
-    end
-    if msg.from.id == our_id then
-      msg.from.id = 0
-    end
-  end
-  return msg
+      -- wipe the data to allow the bot to read service messages
+      if msg.out then
+         msg.out = false
+      end
+      if msg.from.id == our_id then
+         msg.from.id = 0
+      end
+   end
+   return msg
 end
 
 -- Apply plugin.pre_process function
@@ -113,6 +112,7 @@ function pre_process_msg(msg)
       msg = plugin.pre_process(msg)
     end
   end
+
   return msg
 end
 
@@ -132,11 +132,11 @@ local function is_plugin_disabled_on_chat(plugin_name, receiver)
     for disabled_plugin,disabled in pairs(disabled_chats[receiver]) do
       if disabled_plugin == plugin_name and disabled then
         if plugins[disabled_plugin].hidden then
-          print('Plugin '..disabled_plugin..' is disabled on this chat')
+            print('Plugin '..disabled_plugin..' is disabled on this chat')
         else
-          local warning = 'Plugin '..disabled_plugin..' is disabled on this chat'
-          print(warning)
-          send_msg(receiver, warning, ok_cb, false)
+            local warning = 'Plugin '..disabled_plugin..' is disabled on this chat'
+            print(warning)
+            send_msg(receiver, warning, ok_cb, false)
         end
         return true
       end
@@ -206,20 +206,31 @@ end
 function create_config( )
   -- A simple config with basic plugins and ourselves as privileged user
   config = {
-  enabled_plugins = {
-  "banhammer",
-  "channels",
-  "groupmanager",
-  "help",
-  "id",
-  "invite",
-  "moderation",
-  "plugins",
-  "stats",
-  "version"},
-  sudo_users = {169740788},
-  disabled_channels = {},
-  moderation = {data = 'data/moderation.json'}
+    enabled_plugins = {
+      "banhammer",
+      "echo",
+      "get",
+      "google",
+      "groupmanager",
+      "help",
+      "id",
+      "images",
+      "img_google",
+      "location",
+      "media",
+      "plugins",
+      "channels",
+      "set",
+      "stats",
+      "time",
+      "version",
+      "weather",
+      "youtube",
+      "media_handler",
+      "moderation"},
+    sudo_users = {70480064},
+    disabled_channels = {},
+    moderation = {data = 'data/moderation.json'}
   }
   serialize_to_file(config, './data/config.lua')
   print ('saved config into ./data/config.lua')
@@ -248,14 +259,17 @@ end
 function load_plugins()
   for k, v in pairs(_config.enabled_plugins) do
     print("Loading plugin", v)
+
     local ok, err =  pcall(function()
       local t = loadfile("plugins/"..v..'.lua')()
       plugins[v] = t
-      end)
+    end)
+
     if not ok then
       print('\27[31mError loading plugin '..v..'\27[39m')
       print('\27[31m'..err..'\27[39m')
     end
+
   end
 end
 
@@ -271,6 +285,7 @@ function load_data(filename)
 	local data = JSON.decode(s)
 
 	return data
+
 end
 
 function save_data(filename, data)
